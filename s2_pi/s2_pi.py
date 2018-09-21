@@ -3,20 +3,10 @@
 """
 s2_pi.py
 
- Copyright (c) 2016, 2017 Alan Yorinks All right reserved.
+Written by August Sanghyun Park.
+ Alan Yorinks 의 s2pi project의 fork.
 
- Python Banyan is free software; you can redistribute it and/or
- modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
- Version 3 as published by the Free Software Foundation; either
- or (at your option) any later version.
- This library is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- General Public License for more details.
-
- You should have received a copy of the GNU AFFERO GENERAL PUBLIC LICENSE
- along with this library; if not, write to the Free Software
- Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+서보기능 추가
 
 """
 import json
@@ -78,6 +68,16 @@ class S2Pi(WebSocket):
                 time.sleep(1)
                 self.pi.wave_tx_stop()
                 self.pi.wave_delete(wid)
+     
+        # when a user wishes to 서보를 움직이고자 할 때
+        elif client_cmd == 'servo':
+            pin = int(payload['pin'])
+            self.pi.set_mode(pin, pigpio.OUTPUT)
+            degree = int(payload['degree'])
+            pulseWidth = 500 + 2000 / 180 * degree # (0도~180도 => 500~2500)
+
+            self.pi.set_servo_pulsewidth(pin, pulseWidth)
+
         elif client_cmd == 'ready':
             pass
         else:

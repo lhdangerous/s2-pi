@@ -1,18 +1,10 @@
 /**
- Copyright (c) 2016, 2017 Alan Yorinks All right reserved.
+ Writen by August Sanghyun Park.
+ 2018,Sep.
+ Alan Yorinks 의 s2-pi 프로젝트로부터 fork함.
 
- Python Banyan is free software; you can redistribute it and/or
- modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
- Version 3 as published by the Free Software Foundation; either
- or (at your option) any later version.
- This library is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- General Public License for more details.
+ servo 작동기능 추가.
 
- You should have received a copy of the GNU AFFERO GENERAL PUBLIC LICENSE
- along with this library; if not, write to the Free Software
- Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 (function (ext) {
@@ -156,6 +148,21 @@
         }
     };
 
+    // when 서보작동 block is executed
+    ext.moveServo = function (pin, degree) {
+        if (connected == false) {
+            alert("Server Not Connected");
+        }
+        // validate the pin number for the mode
+        if (validatePin(pin)) {
+            var msg = JSON.stringify({
+                "command": 'servo', 'pin': pin, 'degree': degree
+            });
+            console.log(msg);
+            window.socket.send(msg);
+        }
+    };
+
     // when the digital read reporter block is executed
     ext.digital_read = function (pin) {
         if (connected == false) {
@@ -193,6 +200,7 @@
             [" ", "Set BCM %n Output to %m.high_low", "digital_write", "PIN", "0"],
             [" ", "Set BCM PWM Out %n to %n", "analog_write", "PIN", "VAL"],
             [" ", "Tone: BCM %n HZ: %n", "play_tone", "PIN", 1000],
+            [" ", "Move Servo at BCM %n to %n degree", "moveServo", "PIN", 0],	// 실행명령, n번ㅍ에 서보 n도로 움직이기. 기본표시값'PIN',0도
             ["r", "Read Digital Pin %n", "digital_read", "PIN"]
 
         ],
