@@ -163,6 +163,18 @@
         }
     };
 
+    // DC 모터 test
+    ext.setup_DC = function (){
+    	if (connected == false){
+    		alert("Server Not Connected");
+    	}
+    	var msg = JSON.stringify({
+    		"command":'setup_DC'
+    	});
+    	console.log(msg);
+    	window.socket.send(msg);
+    };
+
     // when the digital read reporter block is executed
     ext.digital_read = function (pin) {
         if (connected == false) {
@@ -201,8 +213,8 @@
             [" ", "Set BCM PWM Out %n to %n", "analog_write", "PIN", "VAL"],
             [" ", "Tone: BCM %n HZ: %n", "play_tone", "PIN", 1000],
             [" ", "Move Servo at BCM %n to %n degree", "moveServo", "PIN", 0],	// 실행명령, n번ㅍ에 서보 n도로 움직이기. 기본표시값'PIN',0도
-            ["r", "Read Digital Pin %n", "digital_read", "PIN"]
-
+            ["r", "Read Digital Pin %n", "digital_read", "PIN"],
+            [" ", "testDC","setup_DC"]
         ],
         "menus": {
             "high_low": ["0", "1"]

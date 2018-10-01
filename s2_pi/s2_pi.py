@@ -7,6 +7,7 @@ Written by August Sanghyun Park.
  Alan Yorinks 의 s2pi project의 fork.
 
 서보기능 추가
+adafruit motor hat 기능 추가
 
 """
 import json
@@ -18,12 +19,17 @@ import psutil
 from subprocess import call
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 
+# adafruit motor hat
+from Adafruit_MotorHAT import Adafruit_MotorHAT, Adafruit_DCMotor
+import atexit
+
+
 
 # This class inherits from WebSocket.
 # It receives messages from the Scratch and reports back for any digital input
 # changes.
 class S2Pi(WebSocket):
-   
+
     def handleMessage(self):
         # get command from Scratch2
         payload = json.loads(self.data)
@@ -78,6 +84,14 @@ class S2Pi(WebSocket):
 
             self.pi.set_servo_pulsewidth(pin, pulseWidth)
 
+        # DC 모터 연결되었을 때 test
+        elif client_cmd == 'setup_DC':
+            # motor hat
+            mh = Adafruit_MotorHAT(addr=0x60)
+            dc3 = mh.getMotor(3)
+            dc3.setSpeed(150)
+            dc3.run(Adafruit_MotorHAT.FORWARD)
+
         elif client_cmd == 'ready':
             pass
         else:
@@ -119,6 +133,16 @@ def run_server():
     os.system('scratch2&')
     server = SimpleWebSocketServer('', 9000, S2Pi)
     server.serveforever()
+
+    atexit.register(turnOffMotors)
+
+# 프로그램 끝낼 때는 모터 멈추도록
+def turnOffMotors():
+  # adafruit motor hat에 dc 모터 4개 연결 가능.
+    mh.getMotor(1).run(Adafruit_MotorHAT.RELEASE)
+    mh.getMotor(2).run(Adafruit_MotorHAT.RELEASE)
+    mh.getMotor(3).run(Adafruit_MotorHAT.RELEASE)
+    mh.getMotor(4).run(Adafruit_MotorHAT.RELEASE)
 
 
 if __name__ == "__main__":
