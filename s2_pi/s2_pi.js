@@ -163,13 +163,13 @@
         }
     };
 
-    // DC 모터 test
-    ext.setup_DC = function (){
+    // DC 모터 구동 블럭
+    ext.run_DC = function (motorNum, speed){
     	if (connected == false){
     		alert("Server Not Connected");
     	}
     	var msg = JSON.stringify({
-    		"command":'setup_DC'
+    		"command":'run_DC', 'motorNum' : motorNum, 'speed' : speed
     	});
     	console.log(msg);
     	window.socket.send(msg);
@@ -214,10 +214,11 @@
             [" ", "Tone: BCM %n HZ: %n", "play_tone", "PIN", 1000],
             [" ", "Move Servo at BCM %n to %n degree", "moveServo", "PIN", 0],	// 실행명령, n번ㅍ에 서보 n도로 움직이기. 기본표시값'PIN',0도
             ["r", "Read Digital Pin %n", "digital_read", "PIN"],
-            [" ", "testDC","setup_DC"]
+            [" ", "Run DCmotor %m.DC at speed %n","run_DC",1,"-255~255"]
         ],
         "menus": {
-            "high_low": ["0", "1"]
+            "high_low": ["0", "1"],
+            "DC": [1,2,3,4]
 
         },
         url: 'http://MrYsLab.github.io/s2-pi'

@@ -24,7 +24,6 @@ from Adafruit_MotorHAT import Adafruit_MotorHAT, Adafruit_DCMotor
 import atexit
 
 
-
 # This class inherits from WebSocket.
 # It receives messages from the Scratch and reports back for any digital input
 # changes.
@@ -84,13 +83,23 @@ class S2Pi(WebSocket):
 
             self.pi.set_servo_pulsewidth(pin, pulseWidth)
 
-        # DC 모터 연결되었을 때 test
-        elif client_cmd == 'setup_DC':
-            # motor hat
-            mh = Adafruit_MotorHAT(addr=0x60)
-            dc3 = mh.getMotor(3)
-            dc3.setSpeed(150)
-            dc3.run(Adafruit_MotorHAT.FORWARD)
+        # DC 모터 제어 명령
+        elif client_cmd == 'run_DC':
+            motorNum = int(payload['motorNum'])
+            speed = payload['speed']
+            
+            dc = self.mh.getMotor(motorNum)
+             
+            # 스피드 >0이면 정방향, < 0 이면 역방향 회전. 0은 정지.
+            if (speed > 0):
+                dc.setSpeed(speed)
+                dc.run(Adafruit_MotorHAT.FORWARD)
+            elif (speed < 0):
+                dc.setSpeed(abs(speed))
+                dc.run(Adafruit_MotorHAT.BACKWARD)
+            else:
+                dc.run(Adafruit_MotorHAT.RELEASE)
+            
 
         elif client_cmd == 'ready':
             pass
@@ -108,10 +117,13 @@ class S2Pi(WebSocket):
     def handleConnected(self):
         self.pi = pigpio.pi()
         print(self.address, 'connected')
+        # motor hat
+        self.mh = Adafruit_MotorHAT(addr=0x60)
+        print("motorHAT connected")
 
     def handleClose(self):
         print(self.address, 'closed')
-
+        
 
 def run_server():
     # checking running processes.
@@ -134,21 +146,13 @@ def run_server():
     server = SimpleWebSocketServer('', 9000, S2Pi)
     server.serveforever()
 
-    atexit.register(turnOffMotors)
-
-# 프로그램 끝낼 때는 모터 멈추도록
-def turnOffMotors():
-  # adafruit motor hat에 dc 모터 4개 연결 가능.
-    mh.getMotor(1).run(Adafruit_MotorHAT.RELEASE)
-    mh.getMotor(2).run(Adafruit_MotorHAT.RELEASE)
-    mh.getMotor(3).run(Adafruit_MotorHAT.RELEASE)
-    mh.getMotor(4).run(Adafruit_MotorHAT.RELEASE)
-
-
 if __name__ == "__main__":
     try:
         run_server()
     except KeyboardInterrupt:
+        # 프로그램 끝낼 때는 모터 멈추도록
+        server.mh.getMotor(3).run(Adafruit_MotorHAT.RELEASE)
+
         sys.exit(0)
 
 
