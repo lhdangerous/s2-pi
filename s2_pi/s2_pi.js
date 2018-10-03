@@ -4,6 +4,9 @@
  Alan Yorinks 의 s2-pi 프로젝트로부터 fork함.
 
  servo 작동기능 추가.
+ Adafruit_motorHat 지원
+ DCmotor, Stepper motor 추가
+ 블록 순서 바꾸고 디바이더로 구획 나누어 정리
 
  */
 
@@ -175,6 +178,30 @@
     	window.socket.send(msg);
     };
 
+    // step 모터 세팅
+    ext.set_stepper = function (portNum, steps_per_turn, stepstyle, rpm){
+    	if (connected == false){
+    		alert("Server Not Connected");
+    	}
+    	var msg = JSON.stringify({
+    		"command":'set_stepper', 'portNum' : portNum, 'steps_per_turn': steps_per_turn, 'stepstyle': stepstyle, 'rpm' : rpm
+    	});
+    	console.log(msg);
+    	window.socket.send(msg);
+    };
+
+    // step 모터 작동
+    ext.run_stepper = function (portNum, direction, steps){
+    	if (connected == false){
+    		alert("Server Not Connected");
+    	}
+    	var msg = JSON.stringify({
+    		"command":'run_stepper', 'portNum' : portNum, 'direction': direction, 'steps': steps,
+    	});
+    	console.log(msg);
+    	window.socket.send(msg);
+    };
+
     // when the digital read reporter block is executed
     ext.digital_read = function (pin) {
         if (connected == false) {
@@ -208,23 +235,32 @@
         blocks: [
             // Block type, block name, function name
             ["w", 'Connect to s2_pi server.', 'cnct'],
+            ["-"],	// 예쁘게 구획 나누기
             [" ", 'Set BCM %n as an Input', 'input','PIN'],
+            ["r", "Read Digital Pin %n", "digital_read", "PIN"],
+            ["-"],
             [" ", "Set BCM %n Output to %m.high_low", "digital_write", "PIN", "0"],
             [" ", "Set BCM PWM Out %n to %n", "analog_write", "PIN", "VAL"],
             [" ", "Tone: BCM %n HZ: %n", "play_tone", "PIN", 1000],
+            ["-"],
             [" ", "Move Servo at BCM %n to %n degree", "moveServo", "PIN", 0],	// 실행명령, n번ㅍ에 서보 n도로 움직이기. 기본표시값'PIN',0도
-            ["r", "Read Digital Pin %n", "digital_read", "PIN"],
-            [" ", "Run DCmotor %m.DC at speed %n","run_DC",1,"-255~255"]
+            [" ", "Run DCmotor %m.DC at speed %n","run_DC",1,"-255~255"],
+            [" ", "Set Stepper port: %m.step_motor_port steps/turn: %n step style: %m.stepstyle speed: %n", "set_stepper", 1, 200, "INTERLEAVE", "RPM"], // 먼저 스텝모터 특성 설정 후
+            [" ", "Run Stepper port: %m.step_motor_port direction: %m.direction steps: %n", "run_stepper", 1, "FORWARD", 0],							 // 스텝모터 작동
+
         ],
         "menus": {
             "high_low": ["0", "1"],
-            "DC": [1,2,3,4]
+            "DC": [1,2,3,4],
+            "step_motor_port": [1,2],
+            "stepstyle": ["SINGLE","DOUBLE","INTERLEAVE","MICROSTEP"],
+            "direction" : ["FORWARD", "BACKWARD"]
 
         },
-        url: 'http://MrYsLab.github.io/s2-pi'
+        url: 'http://doguin.com'
     };
 
     // Register the extension
-    ScratchExtensions.register('s2_pi', descriptor, ext);
+    ScratchExtensions.register('s2pi+', descriptor, ext);
 })({});
 

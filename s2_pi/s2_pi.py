@@ -20,7 +20,7 @@ from subprocess import call
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 
 # adafruit motor hat
-from Adafruit_MotorHAT import Adafruit_MotorHAT, Adafruit_DCMotor
+from Adafruit_MotorHAT import Adafruit_MotorHAT, Adafruit_DCMotor, Adafruit_StepperMotor
 import atexit
 
 
@@ -99,7 +99,30 @@ class S2Pi(WebSocket):
                 dc.run(Adafruit_MotorHAT.BACKWARD)
             else:
                 dc.run(Adafruit_MotorHAT.RELEASE)
-            
+
+        # Stepper 제어명령
+        elif client_cmd == 'set_stepper':
+            portNum = int(payload['portNum'])
+            steps_per_turn = int(payload['steps_per_turn'])
+            styleList =  ['SINGLE', 'DOUBLE', 'INTERLEAVE', 'MICROSTEP']
+            stepStyleList = [Adafruit_MotorHAT.SINGLE, Adafruit_MotorHAT.DOUBLE, Adafruit_MotorHAT.INTERLEAVE, Adafruit_MotorHAT.MICROSTEP]
+            stepstyle = stepStyleList[styleList.index(payload['stepstyle'])]
+            rpm = int(payload['rpm'])
+
+            self.steps_per_turn[portNum-1] = steps_per_turn
+            # self.stepper[portNum-1] = self.mh.getStepper(steps_per_turn, portNum)
+            self.stepstyle[portNum-1] = stepstyle
+            self.rpm[portNum-1] = rpm
+
+        elif client_cmd == 'run_stepper':
+            portNum = int(payload['portNum'])
+            direction = Adafruit_MotorHAT.BACKWARD if (payload['direction'] == 'BACKWARD' ) else Adafruit_MotorHAT.FORWARD
+            print("direction: %s" %direction)
+            steps = int(payload['steps'])
+
+            stepper = self.mh.getStepper(self.steps_per_turn[portNum -1],portNum)
+            stepper.setSpeed(self.rpm[portNum -1])
+            stepper.step(steps, direction, self.stepstyle[portNum - 1])
 
         elif client_cmd == 'ready':
             pass
@@ -120,6 +143,11 @@ class S2Pi(WebSocket):
         # motor hat
         self.mh = Adafruit_MotorHAT(addr=0x60)
         print("motorHAT connected")
+        # 2개의 stepper 모터의 설정정보를 멤버변수로 기억해둠
+        self.steps_per_turn = [None, None]
+        self.stepper =[ None, None]
+        self.stepstyle = [None, None]
+        self.rpm = [None, None]
 
     def handleClose(self):
         print(self.address, 'closed')
